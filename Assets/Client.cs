@@ -3,8 +3,9 @@ using System.Net;
 using System.Net.Sockets;
 using System.IO;
 using System.Collections.Generic;
-
 using System.Threading;
+
+using Newtonsoft.Json.Linq;
 
 using UnityEngine;
 
@@ -32,8 +33,14 @@ public class Client {
         tcpClient.Close();
     }
 
-    public void Send(string command, string data) {
-        string message = command + "$" + data;
+    public void Send(string command, JObject data) {
+        string message = "";
+        if(data.GetType() == typeof(string)){
+            message = command + "$" + data;
+        }else{
+            string jsonData = data.ToString();
+            message = command + "$" + jsonData;
+        }
         writer.WriteLine(message);
     }
 
@@ -42,7 +49,7 @@ public class Client {
             try{
                 string message = reader.ReadLine();
                 if(message != null){
-                    Debug.Log("received message from server...");
+                    // Debug.Log("received message from server...");
                     latestMsg = message;
                 }
             } catch(Exception ex) {

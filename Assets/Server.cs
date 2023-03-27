@@ -5,6 +5,9 @@ using System.IO;
 using System.Collections.Generic;
 using System.Threading;
 
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
 using UnityEngine;
 
 public class Server {
@@ -19,7 +22,7 @@ public class Server {
     private string msgToSendToClients = "payload";
 
     // cmd = func dictionary
-    Dictionary<string, Action<string>> messageHandlers = new Dictionary<string, Action<string>>();
+    Dictionary<string, Action<JObject>> messageHandlers = new Dictionary<string, Action<JObject>>();
 
     private Server() {
     }
@@ -45,7 +48,7 @@ public class Server {
         tcpListener.Stop();
     }
 
-    public void On(string command, Action<string> action){
+    public void On(string command, Action<JObject> action){
         messageHandlers[command] = action;
     }
 
@@ -111,10 +114,12 @@ public class Server {
 
                         string[] tokens = message.Split("$");
                         string command = tokens[0];
-                        string data = tokens[1];
+                        Debug.Log($"tokens[1]: {tokens[1]}");
+                        JObject data = JObject.Parse(tokens[1]);
+                        Debug.Log($"data: {data}");
 
                         if(serverInstance.messageHandlers.ContainsKey(command)){
-                            Action<string> handler = serverInstance.messageHandlers[command];
+                            Action<JObject> handler = serverInstance.messageHandlers[command];
                             handler(data);
                         }
 
