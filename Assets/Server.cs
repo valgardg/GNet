@@ -3,7 +3,6 @@ using System.Net;
 using System.Net.Sockets;
 using System.IO;
 using System.Collections.Generic;
-
 using System.Threading;
 
 using UnityEngine;
@@ -13,11 +12,14 @@ public class Server {
     private TcpListener tcpListener;
     private List<ClientHandler> clients = new List<ClientHandler>();
     private Thread serverThread;
+    private int portno;
     
     public int clientsConnected;
 
+    private string msgToSendToClients = "payload";
+
     // cmd = func dictionary
-    Dictionary<string, Action<Dictionary<string,string>>> messageHandlers = new Dictionary<string, Action<Dictionary<string,string>>>();
+    Dictionary<string, Action<string>> messageHandlers = new Dictionary<string, Action<string>>();
 
     private Server() {
     }
@@ -31,7 +33,8 @@ public class Server {
         }
     }
 
-    public void Start(){
+    public void Start(int portNumber){
+        portno = portNumber;
         clientsConnected = 0;
         serverThread = new Thread(new ThreadStart(ServerThread));
         serverThread.Start();
@@ -42,13 +45,17 @@ public class Server {
         tcpListener.Stop();
     }
 
-    public void On(string command, Action<Dictionary<string,string>> action){
+    public void On(string command, Action<string> action){
         messageHandlers[command] = action;
+    }
+
+    public void Emit(string msg){
+        msgToSendToClients = msg;
     }
 
     private void ServerThread(){
         IPAddress ipAddress = IPAddress.Parse("127.0.0.1");
-        tcpListener = new TcpListener(ipAddress, 42069);
+        tcpListener = new TcpListener(ipAddress, portno);
         tcpListener.Start();
         Debug.Log("Server started");
         
@@ -72,6 +79,7 @@ public class Server {
     private class ClientHandler {
         private TcpClient client;
         private NetworkStream stream;
+        private StreamWriter writer;
         private Thread receiveThread;
         private bool isRunning = false;
         private Server serverInstance;
@@ -83,6 +91,7 @@ public class Server {
 
         public void Run() {
             stream = client.GetStream();
+            writer = new StreamWriter(stream);
             isRunning = true;
 
             receiveThread = new Thread(new ThreadStart(Receive));
@@ -100,18 +109,18 @@ public class Server {
                         string message = System.Text.Encoding.ASCII.GetString(buffer, 0, bytesRead);
                         Debug.Log("Received message from client: " + message);
 
-                        // convert json encoded message into dictoinary to be used
-                        //Dictionary<string, string> msgDict = JsonSerializer.Deserialize<Dictionary<string, string>>(message);
-                        //string command = msgDict["action"];
-                        // first 
-                        if(serverInstance.messageHandlers.ContainsKey(message)){
-                            Action<Dictionary<string,string>> handler = serverInstance.messageHandlers[message];
-                            handler(null);
+                        string[] tokens = message.Split("$");
+                        string command = tokens[0];
+                        string data = tokens[1];
+
+                        if(serverInstance.messageHandlers.ContainsKey(command)){
+                            Action<string> handler = serverInstance.messageHandlers[command];
+                            handler(data);
                         }
 
                         // Echo the message back to the client
-                        // byte[] response = System.Text.Encoding.ASCII.GetBytes(message);
-                        // stream.Write(response, 0, response.Length);
+                        writer.WriteLine(serverInstance.msgToSendToClients);
+                        writer.Flush();
                     }
                 } catch (Exception ex) {
                     Debug.Log("Error receiving message from client: " + ex.Message);

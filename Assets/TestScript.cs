@@ -13,11 +13,11 @@ public class TestScript : MonoBehaviour
     {
         server = Server.Instance;
 
-        server.On("spawn", (Dictionary<string,string> msgDict) => {
-            Debug.Log("client requested spawn");
+        server.On("spawn", (string data) => {
+            Debug.Log($"client {data} requested spawn");
         });
 
-        server.Start();
+        server.Start(42069);
 
         Debug.Log($"clients connected to server: {server.clientsConnected}");
 
@@ -26,13 +26,6 @@ public class TestScript : MonoBehaviour
 
         client2 = new Client();
         client2.Connect("127.0.0.1", 42069);
-
-        Dictionary<string,string>  testdict = new ();
-        testdict["test1"] = "1test";
-        testdict["test2"] = "2test";
-
-        string json = JsonUtility.ToJson(testdict);
-        Debug.Log(json);
         
     }
 
@@ -41,17 +34,21 @@ public class TestScript : MonoBehaviour
     {
         //Debug.Log("testscript is running ig...");
         if (Input.GetKeyDown(KeyCode.Space)) {
-            client1.Send("spawn");
+            client1.Send("spawn","1");
+            string message = client1.Receive();
+            Debug.Log("we are now checking if message is null or not");
+            if (message != null) {
+                Debug.Log("Received message: " + message);
+            }
         }
 
         if (Input.GetKeyDown(KeyCode.E)) {
-            client2.Send("spawn");
+            client2.Send("spawn","2");
+            string message = client2.Receive();
+            if (message != null) {
+                Debug.Log("Received message: " + message);
+            }
         }
-
-        // string message = client.Receive();
-        // if (message != null) {
-        //     Debug.Log("Received message: " + message);
-        // }
     }
 
     void OnApplicationQuit() {
