@@ -1,66 +1,46 @@
 using System;
-using System.Net;
 using System.Net.Sockets;
-using System.IO;
-using System.Collections.Generic;
-using System.Threading;
-
+using System.Text;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-using UnityEngine;
+public class Client
+{
+    private TcpClient _client;
+    private NetworkStream _stream;
+    private JObject _latestMessage;
 
-public class Client {
-    private TcpClient tcpClient;
-    private StreamReader reader;
-    private StreamWriter writer;
-
-    private string latestMsg;
-    private bool running;
-    private Thread receiveThread;
-
-    public void Connect(string ipAddress, int port) {
-        tcpClient = new TcpClient(ipAddress, port);
-        NetworkStream stream = tcpClient.GetStream();
-        reader = new StreamReader(stream);
-        writer = new StreamWriter(stream);
-        writer.AutoFlush = true;
-        running = true;
-        receiveThread = new Thread(ReceieveThread);
-        receiveThread.Start();
+    public Client()
+    {
+        _latestMessage = null;
     }
 
-    public void Disconnect() {
-        tcpClient.Close();
+    public void Connect(string address, int port)
+    {
+        _client = new TcpClient(address, port);
+        _stream = _client.GetStream();
+        StartReceiving();
     }
 
-    public void Send(string command, JObject data) {
-        string message = "";
-        if(data.GetType() == typeof(string)){
-            message = command + "$" + data;
-        }else{
-            string jsonData = data.ToString();
-            message = command + "$" + jsonData;
-        }
-        writer.WriteLine(message);
-    }
-
-    private void ReceieveThread(){
-        while(running){
-            try{
-                string message = reader.ReadLine();
-                if(message != null){
-                    // Debug.Log("received message from server...");
-                    latestMsg = message;
-                }
-            } catch(Exception ex) {
-                Debug.Log("exception occured while listening for server messages");
-                Debug.Log($"Exception: {ex}");
-                running = false;
-            }
+    private async void StartReceiving()
+    {
+        while (true)
+        {
+            byte[] buffer = new byte[4096];
+            int bytesRead = await _stream.ReadAsync(buffer, 0, buffer.Length);
+            string jsonString = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+            _latestMessage = JsonConvert.DeserializeObject<JObject>(jsonString);
         }
     }
 
-    public string Receive(){
-        return latestMsg;
+    public JObject Receive()
+    {
+        return _latestMessage;
+    }
+
+    public void Send(JObject message)
+    {
+        byte[] buffer = Encoding.UTF8.GetBytes(message.ToString());
+        _stream.Write(buffer, 0, buffer.Length);
     }
 }

@@ -7,61 +7,32 @@ using Newtonsoft.Json.Linq;
 public class TestScript : MonoBehaviour
 {
     private Server server;
-    private Client client1;
-    private Client client2;
+    private Client client;
 
-    private JObject myObj;
-
-    // Start is called before the first frame update
     void Start()
     {
-        server = Server.Instance;
-
-        server.On("spawn", (JObject data) => {
-            Debug.Log($"vaue of id: {data["id"]}");
-        });
-
-        server.Start(42069);
-
-        Debug.Log($"clients connected to server: {server.clientsConnected}");
-
-        client1 = new Client();
-        client1.Connect("127.0.0.1", 42069);
-
-        client2 = new Client();
-        client2.Connect("127.0.0.1", 42069);
-        
-        myObj = new JObject {
-            {"id", "clientId"}
-        };
-
+        server = new Server();
+        server.Start("192.168.1.3", 5000); // Replace with the server computer's local IP address
+        server.On("message", HandleMessage);
+        client = new Client();
+        client.Connect("192.168.1.3", 5000); // Replace with the server computer's local IP address
     }
 
-    // Update is called once per frame
     void Update()
     {
-        //Debug.Log("testscript is running ig...");
-        if (Input.GetKeyDown(KeyCode.Space)) {
-            client1.Send("spawn", myObj);
-            string message = client1.Receive();
-            // Debug.Log("we are now checking if message is null or not");
-            if (message != null) {
-                Debug.Log("Received message: " + message);
-            }
-        }
-
-        if (Input.GetKeyDown(KeyCode.E)) {
-            client2.Send("spawn", myObj);
-            string message = client2.Receive();
-            if (message != null) {
-                Debug.Log("Received message: " + message);
-            }
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            JObject message = new JObject
+            {
+                ["event"] = "message",
+                ["data"] = "Hello from the client!"
+            };
+            client.Send(message);
         }
     }
 
-    void OnApplicationQuit() {
-        client1.Disconnect();
-        client2.Disconnect();
-        server.Stop();
+    private void HandleMessage(JObject message)
+    {
+        Debug.Log("Received message: " + message["data"]);
     }
 }
