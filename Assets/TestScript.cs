@@ -12,12 +12,12 @@ public class TestScript : MonoBehaviour
     void Start()
     {
         server = new Server();
-        server.Start("192.168.1.3", 5000); // Replace with the server computer's local IP address
+        server.Start("192.168.1.3", 8888); // Replace with the server computer's local IP address
         server.On("message", HandleMessage);
         client = new Client();
-        client.Connect("192.168.1.3", 5000); // Replace with the server computer's local IP address
+        client.Connect("192.168.1.3", 8888); // Replace with the server computer's local IP address
     }
-
+ 
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Space))

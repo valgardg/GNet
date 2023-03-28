@@ -3,43 +3,87 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
+using UnityEngine;
 
 public class Server
 {
     private TcpListener _listener;
     private Dictionary<string, Action<JObject>> _eventHandlers;
     private Thread _listenerThread;
+    private List<TcpClient> _connectedClients;
+    private string _gameState;
+    private int _updateInterval;
+    private int _broadcastPort;
+    private CancellationTokenSource _cancellationTokenSource;
 
-    public Server()
+    /*
+    Initializes the server and all its attributes.
+    */
+    public Server(int updateInterval = 1000)
     {
         _eventHandlers = new Dictionary<string, Action<JObject>>();
+        _connectedClients = new List<TcpClient>();
+        _gameState = "";
+        _updateInterval = updateInterval;
+        _cancellationTokenSource = new CancellationTokenSource();
     }
 
-    public void Start(string address, int port)
+    /*
+    Creates server TcpListener on the specified address and port. 
+    Sets up all of servers threads and loops responsible for handling 
+    incoming clienit connectons and requests as well as broadcasting 
+    server _gameState and port to potential clients.
+    */
+    public void Start(string address, int port = 8888)
     {
+        _broadcastPort = port;
         _listener = new TcpListener(IPAddress.Parse(address), port);
         _listener.Start();
-        _listenerThread = new Thread(ListenForClients);
+        _listenerThread = new Thread(() => ListenForClients(_cancellationTokenSource.Token));
         _listenerThread.Start();
+        ThreadPool.QueueUserWorkItem(SendGameStateUpdates, _cancellationTokenSource.Token);
+        ThreadPool.QueueUserWorkItem(BroadcastPresence, Tuple.Create(new IPEndPoint(IPAddress.Parse(address), port), _cancellationTokenSource.Token));
     }
 
-    private void ListenForClients()
+    /*
+    Thread responsible for listening for incoming client connections and 
+    adding a tcp client to the list of connected clients so that it can 
+    start receiving messages and sending _gameState.
+    */
+    private void ListenForClients(CancellationToken cancellationToken)
     {
-        while (true)
-        {
-            TcpClient client = _listener.AcceptTcpClient();
-            Thread clientThread = new Thread(HandleClientComm);
-            clientThread.Start(client);
+        try{
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                TcpClient client = _listener.AcceptTcpClient();
+                lock (_connectedClients)
+                {
+                    _connectedClients.Add(client);
+                }
+                Thread clientThread = new Thread(HandleClientComm);
+                clientThread.Start(client);
+            }
+        }catch(Exception ex){
+            if(!cancellationToken.IsCancellationRequested){
+                Debug.Log($"Exception occured: {ex}");
+            }
         }
     }
 
+    /*
+    Thread responsible for receiving a clients command while the server is running. 
+    One thread is created for each client.
+    */
     private void HandleClientComm(object clientObj)
     {
         TcpClient client = (TcpClient)clientObj;
         NetworkStream stream = client.GetStream();
+
+        Debug.Log("Client connected!");
 
         while (true)
         {
@@ -57,11 +101,87 @@ public class Server
                 _eventHandlers[message["event"].ToString()](message);
             }
         }
+        lock (_connectedClients)
+        {
+            _connectedClients.Remove(client);
+        }
         client.Close();
     }
 
+    /* 
+    Adds an <event, handler> pair to the eventHandlers dictionary so that 
+    when an event is received from the client, the appropriate code is executed.
+    */
     public void On(string eventName, Action<JObject> handler)
     {
         _eventHandlers[eventName] = handler;
+    }
+
+    /* 
+    A method that sets the servers _gameState to whatever object was pased 
+    into the method. This _gameState is whats sent to the client evrey tick.
+    */
+    public void SetState(JObject state)
+    {
+        _gameState = state.ToString();
+    }
+
+    /* 
+    Thread responsible for broadcasting _gameState to all 
+    clients that are connected to the server.
+    */
+    private async void SendGameStateUpdates(object state)
+    {
+        CancellationToken cancellationToken = (CancellationToken)state;
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            await Task.Delay(_updateInterval, cancellationToken);
+            JObject message = new JObject
+            {
+                ["event"] = "gameStateUpdate",
+                ["data"] = _gameState
+            };
+            byte[] buffer = Encoding.UTF8.GetBytes(message.ToString());
+            lock (_connectedClients)
+            {
+                foreach (TcpClient client in _connectedClients)
+                {
+                    NetworkStream stream = client.GetStream();
+                    stream.Write(buffer, 0, buffer.Length);
+                }
+            }
+        }
+    }
+
+    /*
+    Thread responsible for broadcasting the servers port to any clients that may be
+    listening so they know the server is running at a specified port.
+    */
+    private async void BroadcastPresence(object state)
+    {
+        var tuple = (Tuple<IPEndPoint, CancellationToken>)state;
+        IPEndPoint serverEndpoint = tuple.Item1;
+        CancellationToken cancellationToken = tuple.Item2;
+
+        using (UdpClient udpClient = new UdpClient())
+        {
+            udpClient.EnableBroadcast = true;
+            IPEndPoint broadcastEndpoint = new IPEndPoint(IPAddress.Broadcast, _broadcastPort);
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                byte[] data = Encoding.UTF8.GetBytes(serverEndpoint.ToString());
+                await udpClient.SendAsync(data, data.Length, broadcastEndpoint);
+                await Task.Delay(5000);
+            }
+        }
+    }
+
+    /* 
+    Called to stop server running.
+    */
+    public void Stop()
+    {
+        _cancellationTokenSource.Cancel();
+        _listener.Stop();
     }
 }
