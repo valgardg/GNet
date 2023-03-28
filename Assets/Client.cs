@@ -86,9 +86,11 @@ public class Client
     /*
     TODO: Call Thread for every port specified by client
     */
-    public void DiscoverServers(Action<IPEndPoint> onServerDiscovered)
+    public void DiscoverServers(Action<IPEndPoint> onServerDiscovered, int[] ports)
     {
-        ThreadPool.QueueUserWorkItem(ReceiveBroadcasts, Tuple.Create(onServerDiscovered, _cancellationTokenSource.Token, 8888));
+        foreach(int p in ports){
+            ThreadPool.QueueUserWorkItem(ReceiveBroadcasts, Tuple.Create(onServerDiscovered, _cancellationTokenSource.Token, p));
+        }
     }
 
     /*

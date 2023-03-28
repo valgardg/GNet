@@ -5,7 +5,7 @@ using UnityEngine;
 using Newtonsoft.Json.Linq;
 using System.Linq;
 
-public class ClientObject : MonoBehaviour
+public class ClientDemo : MonoBehaviour
 {
     private Client client;
     List<int> openPorts = new List<int>();
