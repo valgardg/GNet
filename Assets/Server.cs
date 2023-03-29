@@ -20,6 +20,9 @@ public class Server
     private int _broadcastPort;
     private CancellationTokenSource _cancellationTokenSource;
 
+    // lock object for gamestate
+    private readonly Queue<Action> _actionsQueue = new Queue<Action>();
+
     /*
     Initializes the server and all its attributes.
     */
@@ -94,11 +97,21 @@ public class Server
                 break;
 
             string jsonString = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-            JObject message = JsonConvert.DeserializeObject<JObject>(jsonString);
 
-            if (message.ContainsKey("event") && _eventHandlers.ContainsKey(message["event"].ToString()))
+            // TODO # Figure out why this is failing randomly. Is this packets getting messed up?
+            try
             {
-                _eventHandlers[message["event"].ToString()](message);
+                JObject message = JsonConvert.DeserializeObject<JObject>(jsonString);
+                if (message.ContainsKey("event") && _eventHandlers.ContainsKey(message["event"].ToString()))
+                {
+                    lock(_actionsQueue){
+                        _actionsQueue.Enqueue(() => _eventHandlers[message["event"].ToString()](message));
+                    }
+                }
+            }
+            catch(Exception)
+            {
+
             }
         }
         lock (_connectedClients)
@@ -106,6 +119,18 @@ public class Server
             _connectedClients.Remove(client);
         }
         client.Close();
+    }
+
+    public void ProcessActions()
+    {
+        lock (_actionsQueue)
+        {
+            while (_actionsQueue.Count > 0)
+            {
+                Action action = _actionsQueue.Dequeue();
+                action();
+            }
+        }
     }
 
     /* 

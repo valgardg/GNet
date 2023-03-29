@@ -25,22 +25,7 @@ public class ClientObject2 : MonoBehaviour
  
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Space) && client.IsConnected())
-        {
-            Vector2 spawnPosition = new Vector2(0,0);
-            var spawnPositionList = new List<float> {spawnPosition.x, spawnPosition.y};
-            JObject message = new JObject
-            {   
-                ["event"] = "spawn",
-                ["id"] = "1",
-                ["position"] = JToken.FromObject(spawnPositionList)
-            };
-            client.Send(message);
-        }
-
-        if(Input.GetKeyDown(KeyCode.L) && !client.IsConnected()){
-            client.Connect("192.168.1.3", 8888);
-        }
+        GetUserInput();
 
         if(client.IsConnected()){
             // ISSUE # CLIENT MESSAGE STARTS OFF NULL FOR A LITTLE BIT EVEN AFTER CLIENT IS CONNECTED
@@ -54,6 +39,77 @@ public class ClientObject2 : MonoBehaviour
 
     }
 
+    private void GetUserInput()
+    {
+        #region User Input
+        #region Movement
+        if (Input.GetKeyDown(KeyCode.Space) && client.IsConnected())
+        {
+            var spawnPositionList = new List<float> {0f, 0f};
+            JObject message = new JObject
+            {   
+                ["event"] = "spawn",
+                ["id"] = "1",
+                ["position"] = JToken.FromObject(spawnPositionList),
+            };
+            client.Send(message);
+        }
+
+        if(Input.GetKey(KeyCode.W) && client.IsConnected())
+        { 
+            var movementVector = new List<float> {0f, 0.008f};
+            JObject message = new JObject
+            {
+                ["event"] = "move",
+                ["id"] = "1",
+                ["Vector"] = JToken.FromObject(movementVector),
+            };
+            client.Send(message);
+        }
+
+        if(Input.GetKey(KeyCode.A) && client.IsConnected())
+        { 
+            var movementVector = new List<float> {-0.008f, 0f};
+            JObject message = new JObject
+            {
+                ["event"] = "move",
+                ["id"] = "1",
+                ["Vector"] = JToken.FromObject(movementVector),
+            };
+            client.Send(message);
+        }
+
+        if(Input.GetKey(KeyCode.S) && client.IsConnected())
+        { 
+            var movementVector = new List<float> {0f, -0.008f};
+            JObject message = new JObject
+            {
+                ["event"] = "move",
+                ["id"] = "1",
+                ["Vector"] = JToken.FromObject(movementVector),
+            };
+            client.Send(message);
+        }
+
+        if(Input.GetKey(KeyCode.D) && client.IsConnected())
+        { 
+            var movementVector = new List<float> {0.008f, 0f};
+            JObject message = new JObject
+            {
+                ["event"] = "move",
+                ["id"] = "1",
+                ["Vector"] = JToken.FromObject(movementVector),
+            };
+            client.Send(message);
+        }
+        #endregion
+
+        if(Input.GetKeyDown(KeyCode.L) && !client.IsConnected()){
+            client.Connect("192.168.1.3", 8888);
+        }
+        #endregion
+    }
+
     private GameObject InstantiatePlayerSquare(List<float> position)
     {
         Vector2 positionVec = new Vector2(position[0], position[1]);
@@ -63,7 +119,7 @@ public class ClientObject2 : MonoBehaviour
 
     private void ApplyGameState(GameState gameState)
     {
-        foreach (var player in gameState.Players)
+        foreach (var player in gameState.Players.ToList())
         {
             string playerId = player.Key;
             List<float> playerPosition = player.Value.Position;

@@ -54,7 +54,16 @@ public class Client
             byte[] buffer = new byte[4096];
             int bytesRead = await _stream.ReadAsync(buffer, 0, buffer.Length);
             string jsonString = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-            _latestMessage = JsonConvert.DeserializeObject<JObject>(jsonString);
+            
+            // TODO # Is this even more lag?? Need to figure out why it fails.
+            try
+            {
+                _latestMessage = JsonConvert.DeserializeObject<JObject>(jsonString);
+            }
+            catch(Exception)
+            {
+                _latestMessage = null;
+            }
         }
     }
 

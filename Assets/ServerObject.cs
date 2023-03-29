@@ -10,23 +10,21 @@ public class ServerObject : MonoBehaviour
 
     void Start()
     {
-        server = new Server(100);
+        server = new Server(10);
         server.Start("192.168.1.3", 8888); // Replace with the server computer's local IP address
         // server.On("message", HandleMessage);
         server.On("spawn", OnPlayerSpawn);
+        server.On("move", OnPlayerMove);
     }
 
     void Update()
     {
         // Update the game state periodically (assuming you have a method to get the game state as a JObject)
-        JObject gameState = GetGameState();
+        JObject gameState;
+        gameState = GetGameState();
         server.SetState(gameState);
+        server.ProcessActions();
     }
-
-    // private void HandleMessage(JObject message)
-    // {
-    //     Debug.Log("Received message: " + message["data"]);
-    // }
 
     private void OnPlayerSpawn(JObject message){
         string playerId = message["id"].ToString();
@@ -37,11 +35,11 @@ public class ServerObject : MonoBehaviour
         _gameState.Players[playerId] = newPlayer;
     }
 
-    private void OnPlayerMove(JObject message)
-    {
-        //string playerId = message["id"].ToString();
-        //Vector2 newPosition = message["position"].ToObject<Vector2>();
-        //if(_gameState.Players.ContainsKey(playerId));
+    private void OnPlayerMove(JObject message){
+        string playerId = message["id"].ToString();
+        List<float> movementVector = message["Vector"].ToObject<List<float>>();
+        _gameState.Players[playerId].Position[0] += movementVector[0];
+        _gameState.Players[playerId].Position[1] += movementVector[1];
     }
 
     private JObject GetGameState()
