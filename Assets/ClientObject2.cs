@@ -10,6 +10,9 @@ public class ClientObject2 : MonoBehaviour
 {
     [SerializeField]
     private GameObject playerSquarePrefab;
+    
+    public string clientId = "1234";
+    public float clientSpeed = 1f;
 
     private Dictionary<string, GameObject> _playerSquares = new Dictionary<string, GameObject>();
 
@@ -49,7 +52,7 @@ public class ClientObject2 : MonoBehaviour
             JObject message = new JObject
             {   
                 ["event"] = "spawn",
-                ["id"] = "1",
+                ["id"] = clientId,
                 ["position"] = JToken.FromObject(spawnPositionList),
             };
             client.Send(message);
@@ -57,11 +60,11 @@ public class ClientObject2 : MonoBehaviour
 
         if(Input.GetKey(KeyCode.W) && client.IsConnected())
         { 
-            var movementVector = new List<float> {0f, 0.008f};
+            var movementVector = new List<float> {0f, clientSpeed};
             JObject message = new JObject
             {
                 ["event"] = "move",
-                ["id"] = "1",
+                ["id"] = clientId,
                 ["Vector"] = JToken.FromObject(movementVector),
             };
             client.Send(message);
@@ -69,11 +72,11 @@ public class ClientObject2 : MonoBehaviour
 
         if(Input.GetKey(KeyCode.A) && client.IsConnected())
         { 
-            var movementVector = new List<float> {-0.008f, 0f};
+            var movementVector = new List<float> {-clientSpeed, 0f};
             JObject message = new JObject
             {
                 ["event"] = "move",
-                ["id"] = "1",
+                ["id"] = clientId,
                 ["Vector"] = JToken.FromObject(movementVector),
             };
             client.Send(message);
@@ -81,11 +84,11 @@ public class ClientObject2 : MonoBehaviour
 
         if(Input.GetKey(KeyCode.S) && client.IsConnected())
         { 
-            var movementVector = new List<float> {0f, -0.008f};
+            var movementVector = new List<float> {0f, -clientSpeed};
             JObject message = new JObject
             {
                 ["event"] = "move",
-                ["id"] = "1",
+                ["id"] = clientId,
                 ["Vector"] = JToken.FromObject(movementVector),
             };
             client.Send(message);
@@ -93,11 +96,11 @@ public class ClientObject2 : MonoBehaviour
 
         if(Input.GetKey(KeyCode.D) && client.IsConnected())
         { 
-            var movementVector = new List<float> {0.008f, 0f};
+            var movementVector = new List<float> {clientSpeed, 0f};
             JObject message = new JObject
             {
                 ["event"] = "move",
-                ["id"] = "1",
+                ["id"] = clientId,
                 ["Vector"] = JToken.FromObject(movementVector),
             };
             client.Send(message);

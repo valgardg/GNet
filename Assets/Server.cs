@@ -97,6 +97,9 @@ public class Server
                 break;
 
             string jsonString = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+            Debug.Log($"raw jsonstring; {jsonString}");
+            jsonString = jsonString.Split(new[] { "$"}, StringSplitOptions.RemoveEmptyEntries)[0];
+            Debug.Log($"corrected jsonString: {jsonString}");
 
             // TODO # Figure out why this is failing randomly. Is this packets getting messed up?
             try
@@ -109,9 +112,9 @@ public class Server
                     }
                 }
             }
-            catch(Exception)
+            catch(Exception ex)
             {
-
+                Debug.Log($"exception: {ex}");
             }
         }
         lock (_connectedClients)

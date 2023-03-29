@@ -88,7 +88,7 @@ public class Client
     */
     public void Send(JObject message)
     {
-        byte[] buffer = Encoding.UTF8.GetBytes(message.ToString());
+        byte[] buffer = Encoding.UTF8.GetBytes(message.ToString() + "$");
         _stream.Write(buffer, 0, buffer.Length);
     }
 
