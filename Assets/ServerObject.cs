@@ -13,8 +13,6 @@ public class ServerObject : MonoBehaviour
     void Start()
     {
         server = new Server(tickrate);
-        server.Start("192.168.1.3", 8888); // Replace with the server computer's local IP address
-        // server.On("message", HandleMessage);
         server.On("spawn", OnPlayerSpawn);
         server.On("move", OnPlayerMove);
     }
@@ -29,6 +27,11 @@ public class ServerObject : MonoBehaviour
             server.SetState(gameState);
             server.ProcessActions();
         }
+    }
+
+    public void StartServer()
+    {
+        server.Start("192.168.1.3", 8888); // Replace with the server computer's local IP address
     }
 
     private void OnPlayerSpawn(JObject message){
