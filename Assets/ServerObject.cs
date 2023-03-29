@@ -37,9 +37,11 @@ public class ServerObject : MonoBehaviour
     private void OnPlayerSpawn(JObject message){
         string playerId = message["id"].ToString();
         List<float> startPosition = message["position"].ToObject<List<float>>();
+        string color = message["color"].ToObject<string>();
         PlayerInfo newPlayer = new PlayerInfo();
         newPlayer.Id = playerId;
         newPlayer.Position = startPosition;
+        newPlayer.Color = color;
         _gameState.Players[playerId] = newPlayer;
     }
 
@@ -65,6 +67,7 @@ public class ServerObject : MonoBehaviour
     public class PlayerInfo{
         public string Id { get; set; }
         public List<float> Position { get; set; }
+        public string Color { get; set; }
     }
 
     public class GameState

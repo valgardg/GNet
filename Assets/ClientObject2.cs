@@ -14,6 +14,7 @@ public class ClientObject2 : MonoBehaviour
     public string ipAddress = "192.168.1.3";
     public int portno = 8888;
     public int tickrate = 200;
+    public string clientColor = "white";
 
     public string clientId = "1234";
     public float clientSpeed = 1f;
@@ -63,6 +64,7 @@ public class ClientObject2 : MonoBehaviour
                 ["event"] = "spawn",
                 ["id"] = clientId,
                 ["position"] = JToken.FromObject(spawnPositionList),
+                ["color"] = clientColor
             };
             client.Send(message);
         }
@@ -117,10 +119,16 @@ public class ClientObject2 : MonoBehaviour
         #endregion
     }
 
-    private GameObject InstantiatePlayerSquare(List<float> position)
+    private GameObject InstantiatePlayerSquare(List<float> position, string color)
     {
         Vector2 positionVec = new Vector2(position[0], position[1]);
         GameObject square = Instantiate(playerSquarePrefab, positionVec, Quaternion.identity);
+        // very basic color stuff so i dont have to implement a color dict and whatnot
+        if(color == "blue"){
+            square.GetComponent<SpriteRenderer>().color = Color.blue;
+        }else{
+            square.GetComponent<SpriteRenderer>().color = Color.red;
+        }
         return square;
     }
 
@@ -130,10 +138,11 @@ public class ClientObject2 : MonoBehaviour
         {
             string playerId = player.Key;
             List<float> playerPosition = player.Value.Position;
+            string color = player.Value.Color;
 
             if(!_playerSquares.ContainsKey(playerId))
             {
-                GameObject newSquare = InstantiatePlayerSquare(playerPosition);
+                GameObject newSquare = InstantiatePlayerSquare(playerPosition, color);
                 _playerSquares.Add(playerId, newSquare);
             }
             else 
@@ -151,6 +160,7 @@ public class ClientObject2 : MonoBehaviour
     public class PlayerInfo{
         public string Id { get; set; }
         public List<float> Position { get; set; }
+        public string Color { get; set; }
     }
 
     public class GameState

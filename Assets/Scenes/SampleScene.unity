@@ -1243,8 +1243,9 @@ MonoBehaviour:
   ipAddress: 192.168.1.3
   portno: 8888
   tickrate: 100
+  clientColor: blue
   clientId: 1234
-  clientSpeed: 4
+  clientSpeed: 0.04
 --- !u!4 &1824130398
 Transform:
   m_ObjectHideFlags: 0
