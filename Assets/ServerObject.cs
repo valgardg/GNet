@@ -46,8 +46,8 @@ public class ServerObject : MonoBehaviour
     private void OnPlayerMove(JObject message){
         string playerId = message["id"].ToString();
         List<float> movementVector = message["Vector"].ToObject<List<float>>();
-        _gameState.Players[playerId].Position[0] += movementVector[0];
-        _gameState.Players[playerId].Position[1] += movementVector[1];
+        _gameState.Players[playerId].Position[0] += movementVector[0] * Time.deltaTime;
+        _gameState.Players[playerId].Position[1] += movementVector[1] * Time.deltaTime;
     }
 
     private JObject GetGameState()

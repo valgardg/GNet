@@ -1244,7 +1244,7 @@ MonoBehaviour:
   portno: 8888
   tickrate: 100
   clientId: 1234
-  clientSpeed: 0.008
+  clientSpeed: 4
 --- !u!4 &1824130398
 Transform:
   m_ObjectHideFlags: 0
