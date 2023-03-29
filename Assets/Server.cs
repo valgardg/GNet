@@ -48,6 +48,7 @@ public class Server
         _broadcastPort = port;
         _listener = new TcpListener(IPAddress.Parse(address), port);
         isListening = true;
+        Debug.Log($"server startet listening on address {address} and port {port}");
         _listener.Start();
         _listenerThread = new Thread(() => ListenForClients(_cancellationTokenSource.Token));
         _listenerThread.Start();
@@ -100,9 +101,9 @@ public class Server
                 break;
 
             string jsonString = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-            //Debug.Log($"raw jsonstring serverside: {jsonString}");
+            Debug.Log($"raw jsonstring serverside: {jsonString}");
             jsonString = jsonString.Split(new[] { "$"}, StringSplitOptions.RemoveEmptyEntries)[0];
-            //Debug.Log($"corrected jsonString serverside: {jsonString}");
+            Debug.Log($"corrected jsonString serverside: {jsonString}");
 
             // TODO # Figure out why this is failing randomly. Is this packets getting messed up?
             try

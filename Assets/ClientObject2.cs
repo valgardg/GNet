@@ -10,7 +10,11 @@ public class ClientObject2 : MonoBehaviour
 {
     [SerializeField]
     private GameObject playerSquarePrefab;
-    
+
+    public string ipAddress = "192.168.1.3";
+    public int portno = 8888;
+    public int tickrate = 200;
+
     public string clientId = "1234";
     public float clientSpeed = 1f;
 
@@ -22,7 +26,7 @@ public class ClientObject2 : MonoBehaviour
 
     void Start()
     {
-        client = new Client();
+        client = new Client(tickrate);
         //client.Connect("192.168.1.3", 8888); // Replace with the server computer's local IP address
     }
  
@@ -45,7 +49,7 @@ public class ClientObject2 : MonoBehaviour
     public void ConnectToServer(string setClientId)
     {
         clientId = setClientId;
-        client.Connect("192.168.1.3", 8888);
+        client.Connect(ipAddress, portno);
     }
 
     private void GetUserInput()

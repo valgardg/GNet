@@ -5,12 +5,14 @@ using Newtonsoft.Json.Linq;
 
 public class ServerObject : MonoBehaviour
 {
+    public int tickrate = 200;
+
     private Server server;
     private GameState _gameState = new GameState();
 
     void Start()
     {
-        server = new Server(10);
+        server = new Server(tickrate);
         server.Start("192.168.1.3", 8888); // Replace with the server computer's local IP address
         // server.On("message", HandleMessage);
         server.On("spawn", OnPlayerSpawn);

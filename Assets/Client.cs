@@ -2,9 +2,11 @@ using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System.Threading;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class Client
@@ -12,19 +14,17 @@ public class Client
     private TcpClient _client;
     private NetworkStream _stream;
     private JObject _latestMessage;
+    private int _updateInterval;
     private CancellationTokenSource _cancellationTokenSource;
 
     private bool connected;
 
-    private int _broadcastPort;
-
     /*
     Initialises the clients attributes
     */
-    public Client(int broadcastPort = 8888)
+    public Client(int updateInterval = 1000)
     {
         _latestMessage = null;
-        _broadcastPort = broadcastPort;
         _cancellationTokenSource = new CancellationTokenSource();
     }
 
@@ -118,6 +118,7 @@ public class Client
         {
             while (!cancellationToken.IsCancellationRequested)
             {
+                await Task.Delay(_updateInterval, cancellationToken);
                 UdpReceiveResult result = await udpClient.ReceiveAsync();
                 string serverAddress = Encoding.UTF8.GetString(result.Buffer);
                 IPEndPoint serverEndpoint = ParseIPEndPoint(serverAddress);

@@ -196,6 +196,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d24c57ff7f979214195ecf150f509edc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  tickrate: 100
 --- !u!4 &277193704
 Transform:
   m_ObjectHideFlags: 0
@@ -1104,6 +1105,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playerSquarePrefab: {fileID: 3647118536436858784, guid: c3f737b00368c3448bc05d439ae57d33, type: 3}
+  ipAddress: 192.168.1.3
+  portno: 8888
+  tickrate: 100
   clientId: 1234
   clientSpeed: 0.008
 --- !u!4 &1824130398
