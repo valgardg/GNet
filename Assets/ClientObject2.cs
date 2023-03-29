@@ -42,9 +42,14 @@ public class ClientObject2 : MonoBehaviour
 
     }
 
+    public void ConnectToServer(string setClientId)
+    {
+        clientId = setClientId;
+        client.Connect("192.168.1.3", 8888);
+    }
+
     private void GetUserInput()
     {
-        #region User Input
         #region Movement
         if (Input.GetKeyDown(KeyCode.Space) && client.IsConnected())
         {
@@ -104,11 +109,6 @@ public class ClientObject2 : MonoBehaviour
                 ["Vector"] = JToken.FromObject(movementVector),
             };
             client.Send(message);
-        }
-        #endregion
-
-        if(Input.GetKeyDown(KeyCode.L) && !client.IsConnected()){
-            client.Connect("192.168.1.3", 8888);
         }
         #endregion
     }

@@ -20,6 +20,8 @@ public class Server
     private int _broadcastPort;
     private CancellationTokenSource _cancellationTokenSource;
 
+    private bool isListening = false;
+
     // lock object for gamestate
     private readonly Queue<Action> _actionsQueue = new Queue<Action>();
 
@@ -45,6 +47,7 @@ public class Server
     {
         _broadcastPort = port;
         _listener = new TcpListener(IPAddress.Parse(address), port);
+        isListening = true;
         _listener.Start();
         _listenerThread = new Thread(() => ListenForClients(_cancellationTokenSource.Token));
         _listenerThread.Start();
@@ -97,9 +100,9 @@ public class Server
                 break;
 
             string jsonString = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-            Debug.Log($"raw jsonstring; {jsonString}");
+            //Debug.Log($"raw jsonstring serverside: {jsonString}");
             jsonString = jsonString.Split(new[] { "$"}, StringSplitOptions.RemoveEmptyEntries)[0];
-            Debug.Log($"corrected jsonString: {jsonString}");
+            //Debug.Log($"corrected jsonString serverside: {jsonString}");
 
             // TODO # Figure out why this is failing randomly. Is this packets getting messed up?
             try
@@ -134,6 +137,11 @@ public class Server
                 action();
             }
         }
+    }
+
+    public bool IsListening()
+    {
+        return isListening;
     }
 
     /* 

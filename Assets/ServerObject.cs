@@ -19,11 +19,14 @@ public class ServerObject : MonoBehaviour
 
     void Update()
     {
-        // Update the game state periodically (assuming you have a method to get the game state as a JObject)
-        JObject gameState;
-        gameState = GetGameState();
-        server.SetState(gameState);
-        server.ProcessActions();
+        if(server.IsListening())
+        {
+            // Update the game state periodically (assuming you have a method to get the game state as a JObject)
+            JObject gameState;
+            gameState = GetGameState();
+            server.SetState(gameState);
+            server.ProcessActions();
+        }
     }
 
     private void OnPlayerSpawn(JObject message){
@@ -38,8 +41,8 @@ public class ServerObject : MonoBehaviour
     private void OnPlayerMove(JObject message){
         string playerId = message["id"].ToString();
         List<float> movementVector = message["Vector"].ToObject<List<float>>();
-        _gameState.Players[playerId].Position[0] += movementVector[0] * Time.deltaTime;
-        _gameState.Players[playerId].Position[1] += movementVector[1] * Time.deltaTime;
+        _gameState.Players[playerId].Position[0] += movementVector[0];
+        _gameState.Players[playerId].Position[1] += movementVector[1];
     }
 
     private JObject GetGameState()
