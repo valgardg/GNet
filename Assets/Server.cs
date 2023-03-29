@@ -85,7 +85,7 @@ public class Server
     Thread responsible for receiving a clients command while the server is running. 
     One thread is created for each client.
     */
-    private void HandleClientComm(object clientObj)
+    private async void HandleClientComm(object clientObj)
     {
         TcpClient client = (TcpClient)clientObj;
         NetworkStream stream = client.GetStream();
@@ -95,15 +95,18 @@ public class Server
         while (true)
         {
             byte[] buffer = new byte[4096];
-            int bytesRead = stream.Read(buffer, 0, buffer.Length);
+            int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
 
             if (bytesRead == 0)
                 break;
 
             string jsonString = Encoding.UTF8.GetString(buffer, 0, bytesRead);
             Debug.Log($"raw jsonstring serverside: {jsonString}");
-            jsonString = jsonString.Split(new[] { "$"}, StringSplitOptions.RemoveEmptyEntries)[0];
-            Debug.Log($"corrected jsonString serverside: {jsonString}");
+            if (jsonString.Contains("$"))
+            {
+                jsonString = jsonString.Split(new[] { "$" }, StringSplitOptions.RemoveEmptyEntries)[0];
+                Debug.Log($"corrected jsonString serverside: {jsonString}");
+            }
 
             // TODO # Figure out why this is failing randomly. Is this packets getting messed up?
             try
